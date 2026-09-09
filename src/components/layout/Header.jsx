@@ -3,6 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { Menu, Search, Heart, ShoppingBag, User, X } from 'lucide-react'
 
 import { useStoreConfig } from '@/context/StoreConfigContext'
+import { useCart } from '@/context/CartContext'
+import { useWishlist } from '@/context/WishlistContext'
 import Container from '@/components/ui/Container'
 import Logo from '@/components/ui/Logo'
 import IconButton from '@/components/ui/IconButton'
@@ -23,10 +25,8 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const navigate = useNavigate()
 
-  // TODO(PHASE 6): استبدال هذين الرقمين الثابتين بعدد فعلي من
-  // Cart/Wishlist context بعد بنائهما.
-  const cartCount = 0
-  const wishlistCount = 0
+  const { itemCount: cartCount } = useCart()
+  const { count: wishlistCount } = useWishlist()
 
   function handleSearchSubmit(e) {
     e.preventDefault()

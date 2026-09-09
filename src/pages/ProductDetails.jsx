@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AlertCircle, Heart, PackageX, ShoppingBag } from 'lucide-react'
+import toast from 'react-hot-toast'
 import Container from '@/components/ui/Container'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
@@ -8,22 +9,26 @@ import ImageGallery from '@/components/product/ImageGallery'
 import ColorSwatches from '@/components/product/ColorSwatches'
 import SizeSelector from '@/components/product/SizeSelector'
 import QuantitySelector from '@/components/product/QuantitySelector'
+import RelatedProducts from '@/components/product/RelatedProducts'
 import { useStoreConfig } from '@/context/StoreConfigContext'
+import { useCart } from '@/context/CartContext'
+import { useWishlist } from '@/context/WishlistContext'
 import { getProductBySlug } from '@/services/productsService'
 import { formatPrice } from '@/utils/formatPrice'
+import { cn } from '@/utils/cn'
 
 /**
- * ProductDetails — صفحة تفاصيل المنتج (PHASE 5، الجزء 1/2).
+ * ProductDetails — صفحة تفاصيل المنتج (PHASE 5 + تفعيل PHASE 6).
  *
- * يشمل هذا الجزء: معرض صور، سعر وخصم، حالة المخزون، وصف، اختيار
- * لون/مقاس/كمية، وحالات Loading/Error/NotFound.
- *
- * PHASE 5 (2/2) القادمة: ربط فعلي لزر "أضف للسلة"/"المفضلة" (بعد
- * بناء Cart Context في PHASE 6) + قسم "منتجات ذات صلة".
+ * معرض صور، سعر وخصم، حالة المخزون، وصف، اختيار لون/مقاس/كمية،
+ * منتجات ذات صلة، حالات Loading/Error/NotFound، وأزرار "أضف للسلة"
+ * و"المفضلة" مفعّلة فعليًا عبر Cart/Wishlist context.
  */
 export default function ProductDetails() {
   const { slug } = useParams()
   const { currency } = useStoreConfig()
+  const { addItem } = useCart()
+  const { isInWishlist, toggleItem } = useWishlist()
 
   const [product, setProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -59,6 +64,20 @@ export default function ProductDetails() {
       cancelled = true
     }
   }, [slug, retryKey])
+
+  function handleAddToCart() {
+    if (product.sizes?.length && !selectedSize) {
+      toast.error('من فضلك اختاري المقاس أولًا')
+      return
+    }
+    addItem(product, { size: selectedSize, color: selectedColor, quantity })
+    toast.success('تمت الإضافة للسلة')
+  }
+
+  function handleToggleWishlist() {
+    toggleItem(product)
+    toast.success(isInWishlist(product.id) ? 'تمت الإزالة من المفضلة' : 'تمت الإضافة للمفضلة')
+  }
 
   if (isLoading) {
     return (
@@ -168,7 +187,7 @@ export default function ProductDetails() {
                 variant="primary"
                 size="lg"
                 disabled={!product.inStock}
-                title="سيتم تفعيل السلة فعليًا في PHASE 6"
+                onClick={handleAddToCart}
                 className="flex-1"
               >
                 <ShoppingBag className="size-4" strokeWidth={1.8} />
@@ -177,11 +196,12 @@ export default function ProductDetails() {
               <Button
                 variant="outline"
                 size="lg"
-                title="سيتم تفعيل المفضلة فعليًا في PHASE 6"
-                className="px-4"
-                aria-label="أضف للمفضلة"
+                onClick={handleToggleWishlist}
+                className={cn('px-4', isInWishlist(product.id) && 'text-[var(--color-danger)]')}
+                aria-label={isInWishlist(product.id) ? 'إزالة من المفضلة' : 'أضف للمفضلة'}
+                aria-pressed={isInWishlist(product.id)}
               >
-                <Heart className="size-4" strokeWidth={1.8} />
+                <Heart className="size-4" strokeWidth={1.8} fill={isInWishlist(product.id) ? 'currentColor' : 'none'} />
               </Button>
             </div>
 
@@ -191,6 +211,8 @@ export default function ProductDetails() {
           </div>
         </div>
       </Container>
+
+      <RelatedProducts categorySlug={product.categorySlug} excludeSlug={product.slug} />
     </div>
   )
 }

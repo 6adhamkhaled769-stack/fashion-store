@@ -1,26 +1,33 @@
 import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useStoreConfig } from '@/context/StoreConfigContext'
+import { useWishlist } from '@/context/WishlistContext'
 import ImageWithFallback from '@/components/common/ImageWithFallback'
 import Badge from '@/components/ui/Badge'
 import { formatPrice } from '@/utils/formatPrice'
 import { cn } from '@/utils/cn'
 
 /**
- * ProductCard — بطاقة منتج موحّدة تُستخدم في الصفحة الرئيسية الآن،
- * وستُعاد استخدامها في صفحة المنتجات، نتائج البحث، والمنتجات ذات
- * الصلة (PHASE 4/5) دون أي تكرار للكود.
+ * ProductCard — بطاقة منتج موحّدة تُستخدم في الصفحة الرئيسية، صفحة
+ * المنتجات، نتائج البحث، والمنتجات ذات الصلة.
  *
- * زر "أضف للسلة" غير مُفعّل بعد (سيُربط فعليًا في PHASE 6)، لذا
- * نعرضه كعنصر بصري فقط ضمن رابط تفاصيل المنتج حتى لا نوهم المستخدم
- * بوظيفة غير متاحة بعد.
+ * زر المفضلة مفعّل فعليًا (PHASE 6) عبر WishlistContext.
  */
 export default function ProductCard({ product }) {
   const { currency } = useStoreConfig()
-  const { slug, name, category, price, oldPrice, image, isNew, inStock } = product
+  const { isInWishlist, toggleItem } = useWishlist()
+  const { id, slug, name, category, price, oldPrice, image, isNew, inStock } = product
+  const inWishlist = isInWishlist(id)
 
   const discountPercent =
     oldPrice && oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : null
+
+  function handleToggleWishlist(e) {
+    e.preventDefault()
+    toggleItem(product)
+    toast.success(inWishlist ? 'تمت الإزالة من المفضلة' : 'تمت الإضافة للمفضلة')
+  }
 
   return (
     <Link to={`/products/${slug}`} className="group block">
@@ -40,12 +47,16 @@ export default function ProductCard({ product }) {
           </div>
           <button
             type="button"
-            onClick={(e) => e.preventDefault()}
-            aria-label="أضف للمفضلة"
-            title="أضف للمفضلة (قريبًا)"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-bg)]/90 text-[var(--color-text)] backdrop-blur transition-colors hover:text-[var(--color-secondary)]"
+            onClick={handleToggleWishlist}
+            aria-label={inWishlist ? 'إزالة من المفضلة' : 'أضف للمفضلة'}
+            aria-pressed={inWishlist}
+            title={inWishlist ? 'إزالة من المفضلة' : 'أضف للمفضلة'}
+            className={cn(
+              'inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-bg)]/90 backdrop-blur transition-colors',
+              inWishlist ? 'text-[var(--color-danger)]' : 'text-[var(--color-text)] hover:text-[var(--color-secondary)]'
+            )}
           >
-            <Heart className="size-4" strokeWidth={1.6} aria-hidden="true" />
+            <Heart className="size-4" strokeWidth={1.6} fill={inWishlist ? 'currentColor' : 'none'} aria-hidden="true" />
           </button>
         </div>
 
