@@ -17,10 +17,17 @@ function SkeletonCard() {
 /**
  * ProductGrid — يعرض شبكة المنتجات مع الحالات الثلاث المطلوبة في كل
  * صفحة تعتمد على بيانات غير متزامنة: Loading (skeleton)، Empty، أو
- * المحتوى الفعلي. يُستخدم في /products وسيُعاد استخدامه لاحقًا في
- * نتائج البحث والمنتجات ذات الصلة.
+ * المحتوى الفعلي. يُستخدم في /products، /wishlist، والمنتجات ذات
+ * الصلة. نص حالة Empty قابل للتخصيص حتى يناسب سياق كل صفحة.
  */
-export default function ProductGrid({ items, isLoading, skeletonCount = 8 }) {
+export default function ProductGrid({
+  items,
+  isLoading,
+  skeletonCount = 8,
+  emptyIcon: EmptyIcon = PackageSearch,
+  emptyTitle = 'لا توجد منتجات',
+  emptyMessage = 'لم نجد منتجات مطابقة لهذا الفلتر أو البحث. جرّبي تغيير الصنف أو كلمة البحث.',
+}) {
   if (isLoading && items.length === 0) {
     return (
       <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 xl:grid-cols-4">
@@ -34,11 +41,9 @@ export default function ProductGrid({ items, isLoading, skeletonCount = 8 }) {
   if (!isLoading && items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-        <PackageSearch className="size-10 text-[var(--color-text-muted)]" strokeWidth={1.4} />
-        <p className="font-medium text-[var(--color-text)]">لا توجد منتجات</p>
-        <p className="max-w-xs text-sm text-[var(--color-text-muted)]">
-          لم نجد منتجات مطابقة لهذا الفلتر أو البحث. جرّبي تغيير الصنف أو كلمة البحث.
-        </p>
+        <EmptyIcon className="size-10 text-[var(--color-text-muted)]" strokeWidth={1.4} />
+        <p className="font-medium text-[var(--color-text)]">{emptyTitle}</p>
+        <p className="max-w-xs text-sm text-[var(--color-text-muted)]">{emptyMessage}</p>
       </div>
     )
   }
