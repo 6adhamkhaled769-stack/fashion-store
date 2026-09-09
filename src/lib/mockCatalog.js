@@ -18,7 +18,7 @@ export const productCategories = [
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
-export const mockCatalogProducts = [
+const rawCatalogProducts = [
   { id: 'c-1', slug: 'linen-wrap-dress', name: 'فستان لينن ملفوف', categorySlug: 'dresses', category: 'فساتين', price: 1450, oldPrice: 1850, isNew: false, inStock: true, sizes: ['XS', 'S', 'M', 'L'], createdAt: '2026-08-20', salesCount: 142, image: 'https://loremflickr.com/700/875/dress,linen,woman?lock=801' },
   { id: 'c-2', slug: 'satin-slip-dress', name: 'فستان ساتان انسيابي', categorySlug: 'dresses', category: 'فساتين', price: 1350, oldPrice: null, isNew: true, inStock: true, sizes: ['S', 'M', 'L'], createdAt: '2026-09-02', salesCount: 38, image: 'https://loremflickr.com/700/875/satin,dress,fashion?lock=802' },
   { id: 'c-3', slug: 'floral-midi-dress', name: 'فستان ميدي مطبع', categorySlug: 'dresses', category: 'فساتين', price: 1240, oldPrice: null, isNew: false, inStock: false, sizes: ['S', 'M', 'L', 'XL'], createdAt: '2026-07-11', salesCount: 96, image: 'https://loremflickr.com/700/875/floral,dress,fashion?lock=803' },
@@ -38,3 +38,56 @@ export const mockCatalogProducts = [
   { id: 'c-17', slug: 'leather-crossbody-bag', name: 'شنطة كروس جلد', categorySlug: 'accessories', category: 'إكسسوارات', price: 980, oldPrice: 1200, isNew: false, inStock: true, sizes: [], createdAt: '2026-04-19', salesCount: 168, image: 'https://loremflickr.com/700/875/crossbody,bag,leather?lock=817' },
   { id: 'c-18', slug: 'gold-drop-earrings', name: 'حلق ذهبي معلّق', categorySlug: 'accessories', category: 'إكسسوارات', price: 340, oldPrice: null, isNew: true, inStock: true, sizes: [], createdAt: '2026-09-04', salesCount: 9, image: 'https://loremflickr.com/700/875/earrings,jewelry,gold?lock=818' },
 ]
+
+const CATEGORY_COLOR_PALETTES = {
+  dresses: [
+    { name: 'أسود', hex: '#1c1c1c' },
+    { name: 'كوجناك', hex: '#b5652b' },
+    { name: 'رملي', hex: '#c9b28a' },
+  ],
+  outerwear: [
+    { name: 'كحلي', hex: '#1f2a3a' },
+    { name: 'أسود', hex: '#1c1c1c' },
+    { name: 'بيج', hex: '#d8c9a8' },
+  ],
+  knitwear: [
+    { name: 'رمادي', hex: '#8a8a86' },
+    { name: 'كريمي', hex: '#e8e0cf' },
+    { name: 'زيتوني', hex: '#3f4a37' },
+  ],
+  trousers: [
+    { name: 'أسود', hex: '#1c1c1c' },
+    { name: 'كحلي', hex: '#1f2a3a' },
+    { name: 'بيج', hex: '#d8c9a8' },
+  ],
+  shoes: [],
+  accessories: [],
+}
+
+function buildDescription(product) {
+  return `${product.name} من تصميمنا الحصري — خامة مختارة بعناية وقصّة مريحة تناسب الاستخدام اليومي. ` +
+    `قطعة أساسية في خزانة ${product.category}، مصنوعة لتدوم مع الغسيل المتكرر دون أن تفقد شكلها.`
+}
+
+function withDetailFields(product) {
+  const [, lock] = product.image.match(/lock=(\d+)/) ?? []
+  const baseLock = Number(lock)
+  const images = lock
+    ? [
+        product.image,
+        product.image.replace(`lock=${lock}`, `lock=${baseLock + 1000}`),
+        product.image.replace(`lock=${lock}`, `lock=${baseLock + 2000}`),
+      ]
+    : [product.image]
+
+  return {
+    ...product,
+    images,
+    description: buildDescription(product),
+    colors: CATEGORY_COLOR_PALETTES[product.categorySlug] ?? [],
+    care: 'غسيل بارد يدوي أو دورة لطيفة — يُفضّل التجفيف في الظل بعيدًا عن أشعة الشمس المباشرة.',
+    stockCount: product.inStock ? Math.max(3, 30 - (product.salesCount % 25)) : 0,
+  }
+}
+
+export const mockCatalogProducts = rawCatalogProducts.map(withDetailFields)

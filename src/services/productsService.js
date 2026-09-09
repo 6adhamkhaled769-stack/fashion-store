@@ -99,3 +99,19 @@ export async function getCategories() {
   await delay(150)
   return productCategories
 }
+
+/** getProductBySlug — يرجع منتج واحد بكامل تفاصيله، أو null لو مش موجود. */
+export async function getProductBySlug(slug) {
+  await delay(SIMULATED_DELAY_MS)
+  return mockCatalogProducts.find((p) => p.slug === slug) ?? null
+}
+
+/**
+ * getRelatedProducts — منتجات من نفس الصنف، باستثناء المنتج الحالي.
+ * TODO(PHASE 9): يمكن تحسينها لاحقًا لتعتمد على مبيعات مشتركة فعلية
+ * بدل مجرد "نفس الصنف".
+ */
+export async function getRelatedProducts(slug, categorySlug, limit = 4) {
+  await delay(300)
+  return mockCatalogProducts.filter((p) => p.categorySlug === categorySlug && p.slug !== slug).slice(0, limit)
+}

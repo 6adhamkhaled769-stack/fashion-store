@@ -59,7 +59,7 @@ export default function FiltersPanel({ initialMinPrice, initialMaxPrice, initial
           {/* خلفية إغلاق عند الضغط برّه اللوحة */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
 
-          <div className="absolute end-0 top-full z-50 mt-2 w-[min(90vw,340px)] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-5 shadow-lg">
+          <div className="absolute start-0 top-full z-50 mt-2 w-[min(90vw,340px)] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-5 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-medium">فلترة النتائج</h3>
               <button onClick={() => setIsOpen(false)} aria-label="إغلاق" className="text-[var(--color-text-muted)]">
