@@ -1,25 +1,63 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Container from '@/components/ui/Container'
 import Button from '@/components/ui/Button'
-import ImageWithFallback from '@/components/common/ImageWithFallback'
-import { heroSlide } from '@/lib/mockData'
+import HeroProductStage from '@/components/home/HeroProductStage'
+import { heroContent, heroProductVariants } from '@/lib/mockData'
+
+const AUTOPLAY_MS = 5000
 
 /**
- * Hero — قسم الافتتاح في الصفحة الرئيسية. تخطيط تحريري (نص + صورة)
- * بدل بانر ممتلئ بالنص فوق الصورة، بما يتماشى مع هوية "بيت أزياء"
- * الهادئة للمشروع.
+ * Hero — قسم الافتتاح في الصفحة الرئيسية.
  *
- * TODO(PHASE 9): استبدال `heroSlide` من mockData ببيانات فعلية —
- * إما من جدول store_settings (بانر واحد قابل للتعديل) أو جدول
- * منفصل لاحقًا إن احتجنا أكثر من slide.
+ * تفاعلي: خلفية القسم بالكامل تتزامن لونيًا مع لون المنتج المعروض
+ * على اليمين (عبر color-mix بلون الخامة الفعلي بنسبة خفيفة فوق لون
+ * خلفية المتجر)، مستوحى من نمط "hero بخلفية متحركة حسب لون المنتج"،
+ * لكن بدرجات هادئة (tint) تحافظ على هوية المتجر الفاخرة بدل ألوان
+ * صارخة. يتبدّل تلقائيًا كل 5 ثوانٍ، ويتوقف التبديل التلقائي عند أي
+ * تفاعل يدوي من الزائر أو عند تمرير الماوس فوقه.
+ *
+ * TODO(PHASE 9): استبدال heroProductVariants من mockData بمنتجات
+ * مُميَّزة فعلية (مع متغيّر لون) من Supabase.
  */
 export default function Hero() {
-  const { eyebrow, title, subtitle, ctaPrimary, ctaSecondary, image } = heroSlide
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const timerRef = useRef(null)
+
+  const variant = heroProductVariants[activeIndex]
+  const nextVariant = heroProductVariants[(activeIndex + 1) % heroProductVariants.length]
+
+  useEffect(() => {
+    if (isPaused) return undefined
+    timerRef.current = setInterval(() => {
+      setActiveIndex((i) => (i + 1) % heroProductVariants.length)
+    }, AUTOPLAY_MS)
+    return () => clearInterval(timerRef.current)
+  }, [isPaused])
+
+  function goPrev() {
+    setActiveIndex((i) => (i - 1 + heroProductVariants.length) % heroProductVariants.length)
+    setIsPaused(true)
+  }
+  function goNext() {
+    setActiveIndex((i) => (i + 1) % heroProductVariants.length)
+    setIsPaused(true)
+  }
+
+  const { eyebrow, title, subtitle, ctaPrimary, ctaSecondary } = heroContent
 
   return (
-    <section className="border-b border-[var(--color-border)]">
+    <section
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="border-b border-[var(--color-border)] transition-colors duration-700 ease-out"
+      style={{
+        backgroundColor: `color-mix(in srgb, ${variant.swatchHex} 14%, var(--color-bg) 86%)`,
+      }}
+    >
       <Container className="grid grid-cols-1 items-center gap-10 py-10 lg:grid-cols-2 lg:gap-14 lg:py-16">
-        {/* النص */}
+        {/* النص — ثابت، لا يتغيّر مع تبديل المنتج */}
         <div className="order-2 lg:order-1">
           {eyebrow && (
             <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-secondary)]">
@@ -45,14 +83,41 @@ export default function Hero() {
               </Button>
             )}
           </div>
+
+          {/* مؤشرات الألوان/المنتجات */}
+          <div className="mt-9 hidden items-center gap-2.5 lg:flex">
+            {heroProductVariants.map((v, i) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => {
+                  setActiveIndex(i)
+                  setIsPaused(true)
+                }}
+                aria-label={v.colorLabel}
+                aria-pressed={i === activeIndex}
+                className="group flex items-center gap-1.5"
+              >
+                <span
+                  className="size-3 rounded-full ring-1 ring-[var(--color-text)]/15 ring-offset-2 ring-offset-[transparent] transition-all"
+                  style={{
+                    backgroundColor: v.swatchHex,
+                    outline: i === activeIndex ? `2px solid ${v.swatchHex}` : 'none',
+                    outlineOffset: 2,
+                  }}
+                />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* الصورة */}
+        {/* المنتج التفاعلي */}
         <div className="order-1 lg:order-2">
-          <ImageWithFallback
-            src={image}
-            alt={title}
-            className="aspect-[4/5] w-full rounded-[var(--radius-lg)] sm:aspect-[16/11] lg:aspect-[4/5]"
+          <HeroProductStage
+            variant={variant}
+            nextVariant={nextVariant}
+            onPrev={goPrev}
+            onNext={goNext}
           />
         </div>
       </Container>
