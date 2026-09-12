@@ -11,10 +11,12 @@ import Checkout from '@/pages/Checkout'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
 import Profile from '@/pages/Profile'
 import Orders from '@/pages/Orders'
 import Wishlist from '@/pages/Wishlist'
 import NotFound from '@/pages/NotFound'
+import ProtectedRoute from '@/components/routing/ProtectedRoute'
 
 import AdminLogin from '@/pages/admin/AdminLogin'
 import AdminOverview from '@/pages/admin/AdminOverview'
@@ -31,8 +33,9 @@ import AdminSettings from '@/pages/admin/AdminSettings'
  * ملاحظات مهمة:
  * - حماية راوتس /admin (Admin-only) سيتم تفعيلها فعليًا في PHASE 11
  *   بعد بناء نظام المصادقة والصلاحيات في PHASE 7 و PHASE 8.
- * - حماية راوتس المستخدم المسجّل (Profile / Orders / Wishlist)
- *   سيتم تفعيلها في PHASE 7.
+ * - حماية راوتس المستخدم المسجّل (Profile / Orders) مفعّلة فعليًا
+ *   عبر ProtectedRoute (PHASE 7). المفضلة تبقى متاحة للزوّار أيضًا
+ *   (تُحفظ محليًا حتى بدون تسجيل دخول).
  * - في هذه المرحلة (PHASE 1) الهدف فقط هو التأكد أن كل الروابط
  *   تعمل وتؤدي إلى الصفحة الصحيحة.
  */
@@ -50,9 +53,24 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/orders" element={<Orders />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/wishlist" element={<Wishlist />} />
 
         <Route path="*" element={<NotFound />} />

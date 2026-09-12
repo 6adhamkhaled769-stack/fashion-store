@@ -7,8 +7,7 @@ import SortDropdown from '@/components/products/SortDropdown'
 import FiltersPanel from '@/components/products/FiltersPanel'
 import ProductGrid from '@/components/products/ProductGrid'
 import Button from '@/components/ui/Button'
-import { getProducts } from '@/services/productsService'
-import { productCategories } from '@/lib/mockCatalog'
+import { getProducts, getCategories } from '@/services/productsService'
 
 const PAGE_SIZE = 8
 
@@ -33,8 +32,20 @@ export default function Products() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [retryKey, setRetryKey] = useState(0)
+  const [categories, setCategories] = useState([])
 
   const sizesParam = searchParams.get('sizes') || ''
+
+  // الأصناف تُجلب مرة واحدة فقط (لا تعتمد على الفلاتر)
+  useEffect(() => {
+    let cancelled = false
+    getCategories().then((cats) => {
+      if (!cancelled) setCategories(cats)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // إعادة الصفحة لـ 1 عند تغيّر أي فلتر من الرابط
   useEffect(() => {
@@ -86,7 +97,7 @@ export default function Products() {
     setSearchParams(next)
   }
 
-  const activeCategory = productCategories.find((c) => c.slug === category)
+  const activeCategory = categories.find((c) => c.slug === category)
   const pageTitle = search
     ? `نتائج البحث عن "${search}"`
     : tag === 'sale'
@@ -110,7 +121,7 @@ export default function Products() {
         </div>
 
         <div className="mb-5">
-          <CategoryTabs categories={productCategories} activeSlug={category} />
+          <CategoryTabs categories={categories} activeSlug={category} />
         </div>
 
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-y border-[var(--color-border)] py-3">

@@ -1,22 +1,38 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { defaultStoreConfig } from '@/lib/defaultStoreConfig'
+import { getStoreSettings } from '@/services/storeSettingsService'
 
-const StoreConfigContext = createContext(defaultStoreConfig)
+const StoreConfigContext = createContext({ storeConfig: defaultStoreConfig, isLoading: true })
 
 /**
  * StoreConfigProvider
  *
  * المصدر الوحيد لبيانات هوية المتجر (الاسم، الشعار، الألوان، بيانات
- * التواصل...) في كامل التطبيق. حاليًا يقرأ من defaultStoreConfig
- * (بيانات ثابتة محليًا).
+ * التواصل...) في كامل التطبيق. يبدأ بـ defaultStoreConfig فورًا (حتى
+ * لا تُعرَض شاشة فارغة أثناء التحميل)، ثم يجلب الإعدادات الحقيقية من
+ * جدول store_settings في Supabase ويستبدلها بمجرد وصولها.
  *
- * بدءًا من PHASE 15، سيتم استبدال الـ useState الأولي بجلب فعلي من
- * جدول store_settings في Supabase (عبر services/storeSettingsService)،
- * وهذا هو المكان الوحيد الذي سيحتاج تعديلًا — كل الصفحات والمكوّنات
- * التي تستهلك useStoreConfig() لن تحتاج أي تغيير.
+ * عند أي خطأ اتصال يبقى المتجر يعمل بالقيم الافتراضية (fallback آمن)
+ * بدل الانهيار الكامل — راجع services/storeSettingsService.js.
  */
 export function StoreConfigProvider({ children }) {
-  const [storeConfig] = useState(defaultStoreConfig)
+  const [storeConfig, setStoreConfig] = useState(defaultStoreConfig)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+
+    getStoreSettings().then((config) => {
+      if (isMounted) {
+        setStoreConfig(config)
+        setIsLoading(false)
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // حقن ألوان المتجر كمتغيرات CSS في وقت التشغيل، حتى تنعكس فورًا
   // على كل مكان يستخدم var(--color-primary) / var(--color-secondary)
@@ -37,7 +53,7 @@ export function StoreConfigProvider({ children }) {
     }
   }, [storeConfig.name])
 
-  const value = useMemo(() => storeConfig, [storeConfig])
+  const value = useMemo(() => ({ ...storeConfig, isLoading }), [storeConfig, isLoading])
 
   return (
     <StoreConfigContext.Provider value={value}>

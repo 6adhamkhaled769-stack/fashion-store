@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { Menu, Search, Heart, ShoppingBag, User, X } from 'lucide-react'
 
 import { useStoreConfig } from '@/context/StoreConfigContext'
+import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import Container from '@/components/ui/Container'
@@ -27,6 +28,7 @@ export default function Header() {
 
   const { itemCount: cartCount } = useCart()
   const { count: wishlistCount } = useWishlist()
+  const { isAuthenticated } = useAuth()
 
   function handleSearchSubmit(e) {
     e.preventDefault()
@@ -74,7 +76,12 @@ export default function Header() {
             className="lg:hidden"
           />
           <IconButton as={NavLink} to="/wishlist" icon={Heart} label="المفضلة" count={wishlistCount} />
-          <IconButton as={NavLink} to="/login" icon={User} label="حسابي" />
+          <IconButton
+            as={NavLink}
+            to={isAuthenticated ? '/profile' : '/login'}
+            icon={User}
+            label={isAuthenticated ? 'حسابي' : 'تسجيل الدخول'}
+          />
           <IconButton as={NavLink} to="/cart" icon={ShoppingBag} label="السلة" count={cartCount} />
         </div>
       </Container>
